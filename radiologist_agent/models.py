@@ -97,7 +97,7 @@ class Report:
     evidence_notes: List[str] = field(default_factory=list)
     critical_findings: List[CriticalFinding] = field(default_factory=list)
 
-    def render(self) -> str:
+    def render(self) -> str:  # noqa: C901
         lines: List[str] = []
         p = self.patient
         lines.append("=" * 72)
@@ -146,3 +146,20 @@ class Report:
                 lines.append(f"  [{cf.severity.value.upper()}] {cf.text}")
         lines.append("=" * 72)
         return "\n".join(lines)
+
+
+@dataclass
+class WorkflowResult:
+    """Structured output of a full workflow run — drives both the CLI and UI."""
+
+    report: Report
+    selections: Dict[str, str] = field(default_factory=dict)
+    dictation: str = ""
+    messages: List[MessageResult] = field(default_factory=list)
+    phone_called: bool = False
+    phone_answered: bool = False
+    radiologist_alerted: bool = False
+    # None when there is no critical finding (no communication required).
+    communication_successful: Optional[bool] = None
+    events: List[Dict[str, str]] = field(default_factory=list)
+    backend: str = ""

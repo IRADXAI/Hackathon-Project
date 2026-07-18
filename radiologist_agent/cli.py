@@ -75,10 +75,10 @@ def main(argv: List[str] = None) -> int:
 
     choose = _interactive_chooser() if args.interactive else auto_chooser()
 
-    report = run_workflow(case, llm=LLM(), choose=choose, dictation=dictation)
+    result = run_workflow(case, llm=LLM(), choose=choose, dictation=dictation)
 
     print()
-    print(report.render())
+    print(result.report.render())
     return 0
 
 

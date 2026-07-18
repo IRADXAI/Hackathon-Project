@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Radiologist Reporting Agent</title>
+<style>
+  :root {
+    --bg: #0e1117; --panel: #161b22; --panel2: #1c232d; --line: #2a313c;
+    --ink: #e6edf3; --muted: #9aa7b4; --accent: #4c8dff; --accent2: #2a4a7f;
+    --ok: #2ea043; --warn: #d29922; --crit: #f85149; --chip: #21262d;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans);
+         font-size: 14px; line-height: 1.5; }
+  header { padding: 14px 22px; border-bottom: 1px solid var(--line);
+           display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  header h1 { font-size: 17px; margin: 0; font-weight: 600; }
+  .badge { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--chip);
+           color: var(--muted); border: 1px solid var(--line); font-family: var(--mono); }
+  .disclaimer { width: 100%; font-size: 12px; color: var(--warn); }
+  .wrap { display: grid; grid-template-columns: 380px 1fr; gap: 0; height: calc(100vh - 96px); }
+  .col { overflow-y: auto; padding: 18px 22px; }
+  .col.left { border-right: 1px solid var(--line); background: var(--panel); }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+       margin: 22px 0 10px; font-weight: 600; }
+  h2:first-child { margin-top: 0; }
+  label.blk { display: block; font-size: 12px; color: var(--muted); margin: 0 0 6px; }
+  textarea { width: 100%; min-height: 92px; background: var(--panel2); color: var(--ink);
+             border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: inherit;
+             resize: vertical; }
+  .opt { display: flex; align-items: flex-start; gap: 8px; padding: 7px 9px; border-radius: 7px;
+         cursor: pointer; }
+  .opt:hover { background: var(--panel2); }
+  .opt input { margin-top: 3px; }
+  .group { border: 1px solid var(--line); border-radius: 9px; padding: 8px; margin-bottom: 12px;
+           background: var(--panel2); }
+  .group .gp-title { font-size: 12px; color: var(--muted); padding: 2px 4px 6px; }
+  .toggle { display: flex; align-items: center; justify-content: space-between;
+            padding: 7px 4px; border-top: 1px solid var(--line); }
+  .toggle:first-of-type { border-top: none; }
+  button.run { width: 100%; margin-top: 16px; padding: 11px; background: var(--accent);
+               color: #fff; border: 0; border-radius: 9px; font-size: 14px; font-weight: 600;
+               cursor: pointer; }
+  button.run:hover { background: #3d7ae0; }
+  button.run:disabled { opacity: .6; cursor: default; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 11px;
+          padding: 16px 18px; margin-bottom: 16px; }
+  .patient-hd { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .patient-hd .name { font-size: 18px; font-weight: 600; }
+  .patient-hd .meta { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+  .sect-h { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+            margin: 14px 0 5px; font-weight: 600; }
+  .sect-h:first-child { margin-top: 0; }
+  .body { white-space: pre-wrap; }
+  .crit-banner { background: rgba(248,81,73,.12); border: 1px solid var(--crit); color: #ffb4ae;
+                 border-radius: 11px; padding: 13px 16px; margin-bottom: 16px; font-weight: 600; }
+  .crit-banner .sub { font-weight: 400; color: #f8a49e; font-size: 13px; margin-top: 4px; }
+  ul.clean { margin: 4px 0; padding-left: 18px; }
+  ul.clean li { margin: 3px 0; }
+
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .tl { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+  .tl:first-child { border-top: none; }
+  .dot { flex: 0 0 9px; width: 9px; height: 9px; border-radius: 50%; margin-top: 6px; }
+  .dot.ok { background: var(--ok); } .dot.no { background: var(--crit); }
+  .dot.info { background: var(--accent); } .dot.warn { background: var(--warn); }
+  .tl .who { font-weight: 600; } .tl .det { color: var(--muted); font-size: 13px; }
+  .pill { font-size: 11px; font-family: var(--mono); padding: 2px 7px; border-radius: 999px;
+          margin-left: 6px; }
+  .pill.ack { background: rgba(46,160,67,.16); color: #7ee2a8; }
+  .pill.noack { background: rgba(248,81,73,.16); color: #ffb4ae; }
+  .result-line { margin-top: 12px; padding: 11px 14px; border-radius: 9px; font-weight: 600; }
+  .result-line.ok { background: rgba(46,160,67,.14); color: #7ee2a8; border: 1px solid var(--ok); }
+  .result-line.fail { background: rgba(248,81,73,.14); color: #ffb4ae; border: 1px solid var(--crit); }
+
+  .log { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .log .row { padding: 2px 0; }
+  .log .step { color: var(--accent); }
+  .placeholder { color: var(--muted); text-align: center; padding: 60px 20px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .chips .c { font-size: 11px; font-family: var(--mono); background: var(--chip); color: var(--muted);
+              padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); }
+  input[type=checkbox] { accent-color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>🩻 Radiologist Reporting Agent</h1>
+  <span class="badge" id="backend">backend: …</span>
+  <span class="disclaimer">⚠️ Research prototype — non-diagnostic. A radiologist owns the final report and communication.</span>
+</header>
+
+<div class="wrap">
+  <!-- CONTROLS -->
+  <div class="col left">
+    <h2>Radiologist dictation</h2>
+    <label class="blk">Your own findings (folded into the report):</label>
+    <textarea id="dictation"></textarea>
+
+    <h2>Report construction tree</h2>
+    <div id="tree"></div>
+
+    <h2>Communication scenario</h2>
+    <div class="group">
+      <div class="gp-title">Who acknowledges the critical-result message?</div>
+      <div class="toggle"><span>Ordering physician</span><input type="checkbox" data-ack="ordering_physician"></div>
+      <div class="toggle"><span>Primary care provider</span><input type="checkbox" data-ack="primary_care_provider"></div>
+      <div class="toggle"><span>Floor nurse</span><input type="checkbox" data-ack="floor_nurse"></div>
+      <div class="toggle"><span>Floor answers escalation phone</span><input type="checkbox" id="floorPhone"></div>
+    </div>
+
+    <button class="run" id="runBtn">Run workflow ▶</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="col right" id="results">
+    <div class="placeholder">Set the scenario and press <b>Run workflow</b> to generate a report.</div>
+  </div>
+</div>
+
+<script>
+const $ = (s, r=document) => r.querySelector(s);
+let TREE = [];
+
+function esc(s){ return (s||"").replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+async function boot() {
+  const c = await (await fetch("/api/case")).json();
+  $("#backend").textContent = "backend: " + c.backend;
+  $("#dictation").value = c.dictation;
+  TREE = c.report_tree;
+  // report tree radios
+  const t = $("#tree"); t.innerHTML = "";
+  TREE.forEach(node => {
+    const g = document.createElement("div"); g.className = "group";
+    g.innerHTML = `<div class="gp-title">${esc(node.prompt)}</div>`;
+    node.options.forEach(o => {
+      const id = node.node_id + "__" + o.key;
+      const lab = document.createElement("label"); lab.className = "opt";
+      lab.innerHTML = `<input type="radio" name="${node.node_id}" value="${o.key}"
+        ${o.key===node.default?"checked":""}> <span>${esc(o.label)}</span>`;
+      g.appendChild(lab);
+    });
+    t.appendChild(g);
+  });
+  // comms toggles from case defaults
+  const acks = c.communication.acknowledges || {};
+  document.querySelectorAll("[data-ack]").forEach(cb => {
+    cb.checked = !!acks[cb.dataset.ack];
+  });
+  $("#floorPhone").checked = !!c.communication.floor_answers_phone;
+}
+
+function collect() {
+  const selections = {};
+  TREE.forEach(n => {
+    const el = document.querySelector(`input[name="${n.node_id}"]:checked`);
+    selections[n.node_id] = el ? el.value : n.default;
+  });
+  const acknowledges = {};
+  document.querySelectorAll("[data-ack]").forEach(cb => acknowledges[cb.dataset.ack] = cb.checked);
+  return {
+    dictation: $("#dictation").value,
+    selections,
+    acknowledges,
+    floor_answers_phone: $("#floorPhone").checked,
+  };
+}
+
+async function run() {
+  const btn = $("#runBtn"); btn.disabled = true; btn.textContent = "Running…";
+  try {
+    const res = await fetch("/api/run", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(collect()),
+    });
+    render(await res.json());
+  } catch (e) {
+    $("#results").innerHTML = `<div class="crit-banner">Error: ${esc(String(e))}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = "Run workflow ▶";
+  }
+}
+
+function commTimeline(d) {
+  if (d.communication_successful === null) {
+    return `<div class="card"><div class="sect-h">Communication</div>
+      <div class="det">No critical finding — no closed-loop communication required.</div></div>`;
+  }
+  let rows = "";
+  d.messages.forEach(m => {
+    const ack = m.acknowledged;
+    rows += `<li class="tl"><span class="dot ${ack?'ok':'no'}"></span><div>
+      <div class="who">${esc(m.contact.role.replace(/_/g,' '))} — ${esc(m.contact.name)}
+        <span class="pill ${ack?'ack':'noack'}">${ack?'ACK':'NO ACK'}</span></div>
+      <div class="det">secure message → ${esc(m.contact.method)} · ${esc(m.detail)}</div></div></li>`;
+  });
+  if (d.phone_called) {
+    rows += `<li class="tl"><span class="dot ${d.phone_answered?'ok':'no'}"></span><div>
+      <div class="who">Phone escalation to floor</div>
+      <div class="det">${d.phone_answered?'call answered; critical result read back and confirmed':'call NOT answered'}</div></div></li>`;
+  }
+  if (d.radiologist_alerted) {
+    rows += `<li class="tl"><span class="dot warn"></span><div>
+      <div class="who">Reading radiologist alerted</div>
+      <div class="det">automated channels failed — radiologist must close the loop</div></div></li>`;
+  }
+  const ok = d.communication_successful;
+  const line = `<div class="result-line ${ok?'ok':'fail'}">${ok
+    ? '✓ COMMUNICATION SUCCESSFUL — critical result acknowledged'
+    : '✗ COMMUNICATION UNSUCCESSFUL by automated channels — radiologist alerted'}</div>`;
+  return `<div class="card"><div class="sect-h">Closed-loop communication</div>
+    <ul class="timeline">${rows}</ul>${line}</div>`;
+}
+
+function render(d) {
+  const r = d.report, p = r.patient;
+  const critical = r.critical_findings || [];
+  let html = "";
+
+  if (critical.length) {
+    html += `<div class="crit-banner">⚠ CRITICAL / COMMUNICABLE FINDING DETECTED
+      ${critical.map(c=>`<div class="sub">• ${esc(c.text)} — ${esc(c.rationale)}</div>`).join("")}</div>`;
+  }
+
+  html += `<div class="card">
+    <div class="patient-hd"><span class="name">${esc(p.name)}</span>
+      <span class="meta">MRN ${esc(p.mrn)} · ${p.age}${esc(p.sex)} · ${esc(p.location)}</span></div>
+    <div class="chips">
+      <span class="c">template: ${esc(r.template)}</span>
+      <span class="c">findings: ${esc(d.selections.findings_source)}</span>
+      <span class="c">impression: ${esc(d.selections.impression_source)}</span>
+      <span class="c">recs: ${esc(d.selections.recommendations)}</span>
+    </div>
+
+    <div class="sect-h">Clinical history</div><div class="body">${esc(r.history.narrative)}</div>
+    <div class="sect-h">Technique</div><div class="body">${esc(r.technique.description)}${
+      r.technique.contrast_agent ? " Contrast: "+esc(r.technique.contrast_agent)+" "+esc(r.technique.contrast_dose||"") : ""}</div>
+    <div class="sect-h">Comparison</div><div class="body">${esc(r.comparison.prior_description)}</div>
+    <div class="sect-h">Findings</div><div class="body">${esc(r.findings)}</div>
+    <div class="sect-h">Impression</div><div class="body">${esc(r.impression)}</div>`;
+
+  if (r.recommendations && r.recommendations.length) {
+    html += `<div class="sect-h">Recommendations (guideline-based)</div>
+      <ul class="clean">${r.recommendations.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
+  }
+  if (r.evidence_notes && r.evidence_notes.length) {
+    html += `<div class="sect-h">Supporting evidence</div>
+      <ul class="clean">${r.evidence_notes.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
+  }
+  html += `</div>`;
+
+  html += commTimeline(d);
+
+  html += `<div class="card"><div class="sect-h">Pipeline trace</div>
+    <div class="log">${d.events.map(e=>`<div class="row"><span class="step">[${esc(e.step)}]</span> ${esc(e.message)}</div>`).join("")}</div></div>`;
+
+  $("#results").innerHTML = html;
+}
+
+$("#runBtn").addEventListener("click", run);
+boot();
+</script>
+</body>
+</html>

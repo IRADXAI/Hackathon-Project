@@ -80,3 +80,20 @@ python3 -m venv .venv
 The demo case is a CT pulmonary angiogram showing an **acute pulmonary
 embolism** — a critical finding — so it exercises the full detect → notify →
 escalate → confirm communication path.
+
+## Web UI
+
+A FastAPI backend + a single self-contained HTML page (`web/`) — a viewer over
+the pipeline. Dictate in the browser, pick the report-tree options, toggle the
+communication scenario (who acknowledges, whether the floor answers the phone),
+and watch the report, critical-finding banner, and closed-loop communication
+timeline update.
+
+```bash
+.venv/bin/pip install -r requirements.txt
+.venv/bin/uvicorn web.server:app --port 8010   # http://localhost:8010
+```
+
+Endpoints: `GET /api/case` (demo case + report tree), `POST /api/run` (runs the
+workflow with the caller's dictation / choices / comms scenario and returns the
+structured result).
