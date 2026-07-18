@@ -1,0 +1,66 @@
+{
+  "case_id": "CTPA-2026-0718-001",
+  "patient": {
+    "mrn": "004182277",
+    "name": "Jordan A. Rivera",
+    "age": 64,
+    "sex": "F",
+    "location": "5 West, Bed 12"
+  },
+  "bridge_note": {
+    "indication": "Acute dyspnea and pleuritic chest pain; rule out pulmonary embolism",
+    "narrative": "64F POD#3 from total knee arthroplasty presenting with acute-onset dyspnea, pleuritic right-sided chest pain, and tachycardia to 118. D-dimer markedly elevated. Wells score 6. Evaluate for pulmonary embolism."
+  },
+  "tech_sheet": {
+    "description": "CT pulmonary angiogram of the chest. Helical acquisition, 1.0 mm collimation, bolus-tracked on the main pulmonary artery.",
+    "contrast_agent": "Iohexol 350",
+    "contrast_dose": "80 mL IV at 5 mL/s"
+  },
+  "pacs": {
+    "prior_available": true,
+    "prior_description": "Comparison is made to the CT chest dated 2026-01-04, which demonstrated clear pulmonary arteries and no acute cardiopulmonary process."
+  },
+  "radiology_model": {
+    "template": "CT Pulmonary Angiogram",
+    "findings": "Pulmonary arteries: Filling defect within the right lower lobe segmental and subsegmental pulmonary arteries consistent with acute pulmonary embolism. No saddle embolus.\nHeart: RV/LV diameter ratio of 1.3 with straightening of the interventricular septum, indicating right heart strain. Contrast reflux into the IVC and hepatic veins.\nLungs: Small right pleural effusion. Peripheral wedge-shaped opacity in the right lower lobe compatible with pulmonary infarct. No pneumothorax.\nBones/soft tissues: No aggressive osseous lesion.",
+    "impression": "Acute right lower lobe segmental and subsegmental pulmonary embolism with CT signs of right heart strain.\nSmall right pleural effusion with probable pulmonary infarct.",
+    "flagged_findings": ["acute pulmonary embolism", "right heart strain"]
+  },
+  "radiologist_dictation": "Agree with acute right lower lobe segmental and subsegmental pulmonary emboli. Emphasize the RV/LV ratio of 1.3 and septal straightening — these indicate right heart strain and should prompt urgent clinical risk stratification.",
+  "chart": {
+    "ordering_physician": {
+      "name": "Dr. Priya Chandra (Orthopedics)",
+      "secure_message": "pchandra@securechat.hospital.org",
+      "phone": "+1-555-0142"
+    },
+    "recent_notes": [
+      {
+        "date": "2026-07-17",
+        "author": "Hospitalist progress note",
+        "primary_care_provider": {
+          "name": "Dr. Marcus Lee (Primary Care)",
+          "secure_message": "mlee@securechat.hospital.org",
+          "phone": "+1-555-0177"
+        }
+      },
+      {
+        "date": "2026-07-15",
+        "author": "Admission H&P"
+      }
+    ],
+    "floor_nurse": {
+      "name": "Nurse Aisha Bello, RN",
+      "secure_message": "abello@securechat.hospital.org",
+      "phone": "+1-555-0199"
+    },
+    "floor_phone": "+1-555-0100"
+  },
+  "communication": {
+    "acknowledges": {
+      "ordering_physician": true,
+      "primary_care_provider": false,
+      "floor_nurse": false
+    },
+    "floor_answers_phone": true
+  }
+}
